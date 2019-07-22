@@ -1,76 +1,9 @@
 <!DOCTYPE html>
 <html>
    <head>
+       <script type="text/javascript" src="ExerciseManager.js" ></script>
    </head>
-   <body onkeydown="keyEvent(event)" onkeyup="metaKeyUp(event)">
-        <h1 id="next"></h1>
-        <h2 id="correcto">CORRECTO!</h2>
-<script>
-       let metaChar = false;
-       let exampleKey = 16;
-
-       let str="Esto es una prueba";
-       let caracteres=str.split("");
-       let contador = 0;
-
-       let pressed={};
-
-       incorrecto();
-       mostrarletraActual();
-
-       function mostrarletraActual() {
-           document.getElementById("next").innerHTML = caracteres[contador];
-       }
-
-       function correcto() {
-           document.getElementById("correcto").innerHTML = "CORRECTO!";
-           document.getElementById("correcto").style.display = "block";
-       }
-       
-       function incorrecto(c1, c2) {
-           document.getElementById("correcto").innerHTML = "INCORRECTO! " + c1 + "<>" + c2;
-           document.getElementById("correcto").style.display = "none";
-       }
-
-       function keyEvent(event) {
-             let key = event.keyCode || event.which;
-             let keychar = String.fromCharCode(key);
-
-             pressed[key] = true;
-
-             if (keychar == caracteres[contador]) {
-                 //alert("correcto!");
-                 contador = contador + 1;
-                 correcto();
-                 mostrarletraActual();
-             }
-           else {
-               
-               incorrecto(keychar, caracteres[contador]);
-           }
-
-             //if (key == exampleKey) {
-             //        metaChar = true;
-             //      }
-             //if (key != exampleKey) {
-             //        if (metaChar) {
-             //                  alert("Combination of metaKey + " + keychar);
-             //                  metaChar = false;
-             //                } else {
-             //                          alert("Key pressed " + key);
-             //                        }
-             //      }
-       }
-
-       function metaKeyUp (event) {
-             let key = event.keyCode || event.which;
-
-             delete pressed[key];
-
-             if (key == exampleKey) {
-                     metaChar = false;
-             }
-       }
-   </script>
+   <body>
+        <div id="keyboard"></div>
    </body>
 </html>
