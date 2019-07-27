@@ -1,46 +1,28 @@
-class StateMachine {
-    
-}
+import { Machine, interpret } from 'xstate'
 
+// Stateless machine definition
+// machine.transition(...) is a pure function used by the interpreter.
+const toggleMachine = Machine({
+  id: 'keyboard',
+  initial: 'init',
+  states: {
+    init: { on: { press_dead: 'dead1' } },
+    dead1: { on: { press_a: 'char_á', release_dead: 'dead2' } },
+    dead2: { on: { press_a: 'char_á', press_dead: 'char_dead' } },
+    char_á: { on: { release_all: 'init' } },
+    char_dead: { on: { release_all: 'init' } }
+  }
+});
 
-// gestor de Ejercicios
-let str="aAá"
-let caracteres=str.split("")
-let contador = 0
-let keyboard = undefined
+// Machine instance with internal state
+const toggleService = interpret(toggleMachine)
+  .onTransition(state => console.log(state.value))
+  .start();
+// => 'inactive'
 
-let loadHandler = function(event) {   
-    // TODO: check that keyboard id exists!
-    let bodytag = document.querySelector("body")
+toggleService.send('press_dead');
+// => 'active'
 
-    keyboard = new Keyboard(bodytag, layout)
+toggleService.send('press_a');
+// => 'inactive':w
 
-    bodytag.onkeydown = keydownHandler
-    bodytag.onkeyup = keyupHandler
-    
-
-    //mostrarletraActual()        
-}
-
-let keydownHandler = function (event) {
-    let key = event.keyCode || event.which
-    let generatedchar = keyboard.press(key)
-}
-
-let keyupHandler = function (event) {
-    let key = event.keyCode || event.which
-    
-    keyboard.release(key)
-}
-
-window.onload = loadHandler
-
-//if (comprobarTecla(key, caracteres[contador])) {
-//    //alert("correcto!")
-//    contador = contador + 1
-//    correcto()
-//    mostrarletraActual()
-//}
-//else {
-//    incorrecto(keychar, caracteres[contador])
-//}
