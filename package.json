@@ -1,0 +1,22 @@
+{
+  "name": "test_events",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "babel src/index.js -o public/scripts/bundle.js --presets env --watch" 
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Canx/test_events.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Canx/test_events/issues"
+  },
+  "homepage": "https://github.com/Canx/test_events#readme",
+  "dependencies": {
+    "babel-preset-env": "^1.7.0"
+  }
+}
