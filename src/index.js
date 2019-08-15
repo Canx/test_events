@@ -18,7 +18,7 @@ const machineConfig = {
   },
   states: {
     start: {
-      entry: [ 'log' ],
+      onEntry: [ 'log' ],
       on: {
         'keydown': { target: 'checking', actions: ['press','highlight']},
         'keyup': { target: 'checking', actions: ['release','unhighlight']},
@@ -26,22 +26,20 @@ const machineConfig = {
     },
 
     checking: {
-      entry: [ 'log', 'resend' ],
+      onEntry: [ 'log', 'resend' ],
       on: {
-        'shift': { target: 'shift', cond: 'shiftPressed', actions: ['log']}
-          //{ target: 'quote', cond: 'quotePressed'}
-          //'char': { target: '.normal', actions: ['print','log'] }
-      //  ]
+        'shift': { target: 'shift', actions: ['log']},
+        'char': { target: 'normal', actions: ['print','log'] }
       }
     },
     shift: {
-      entry: [ 'log' ]
+      onEntry: [ 'log' ]
     },
     quote: {
-      entry: [ 'log' ]
+      onEntry: [ 'log' ]
     },
     quoteshift: {
-      entry: [ 'log' ]
+      onEntry: [ 'log' ]
     }
   }
 }
@@ -122,7 +120,7 @@ const keyboard = interpret(layout).start()
 const loadHandler = function(event) {
   //bodytag.onkeydown = keydownHandler
   //bodytag.onkeyup = keyupHandler
-  keyboard.send('keydown', {code: 'KeyA'})
+  keyboard.send('keydown', {code: 'ShiftRight'})
 }
 
 let keydownHandler = function (event) {
