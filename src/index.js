@@ -8,6 +8,7 @@ const machineConfig = {
   id: 'keyboard',
   initial: 'start',
   context: {
+    lastEvent: null,
     keysPressed: new Set(),
     keys: {
       KeyA: { type: 'char', normal: 'a', shift: 'A', quote: 'á', quoteshift: 'Á'},
@@ -17,19 +18,30 @@ const machineConfig = {
   },
   states: {
     start: {
-      initial: 'normal',
-      states: {
-        normal: {},
-        checking: {},
-        shift: {},
-        quote: {},
-        quoteshift: {}
-      },
+      entry: [ 'log' ],
       on: {
-        'keydown': { target: '.checking', actions: ['log','press','highlight','resend']},
-        'keyup': { target: '.checking', actions: ['log','release','unhighlight']},
-        'char': { target: '.normal', actions: ['log','print'] }
+        'keydown': { target: 'checking', actions: ['press','highlight']},
+        'keyup': { target: 'checking', actions: ['release','unhighlight']},
       }
+    },
+
+    checking: {
+      entry: [ 'log', 'resend' ],
+      on: {
+        'shift': { target: 'shift', cond: 'shiftPressed', actions: ['log']}
+          //{ target: 'quote', cond: 'quotePressed'}
+          //'char': { target: '.normal', actions: ['print','log'] }
+      //  ]
+      }
+    },
+    shift: {
+      entry: [ 'log' ]
+    },
+    quote: {
+      entry: [ 'log' ]
+    },
+    quoteshift: {
+      entry: [ 'log' ]
     }
   }
 }
@@ -37,7 +49,7 @@ const machineConfig = {
 const machineOptions = { 
   actions: {
     'log': (context, event, actionMeta) => {
-      console.log("log EVENT=>" + event.type + " KEY:" + event.code +" STATE:" + actionMeta.state.value.start + " PRESSED:" + context.keysPressed)
+      console.log("event type=>" + event.type + " code:" + event.code +" STATE:" + actionMeta.state.value + " PRESSED:" + context.keysPressed)
     },
     'highlight': (context, event) => {
       console.log("highlight")
@@ -52,12 +64,15 @@ const machineOptions = {
       node.setAttribute("class", "")
     },
     'press': (context, event) => {
+      //debugger
       console.log("press")
       context.keysPressed.add(event.code)
+      context.lastEvent = event
     },
     'release': (context, event) => {
       console.log("release")
       context.keysPressed.delete(event.code)
+      context.lastEvent = event
     },
     'print': (context, event, actionMeta) => {
       console.log("print")
@@ -68,11 +83,9 @@ const machineOptions = {
     },
     'resend': (context, event) => {
       let type = context.keys[event.code].type
-      //debugger
-      console.log("resend")
+      console.log("resend event: " + type)
       // BUG: does not send event!!!
-      send({ 'type': type }, {'source': event })
-      // , 'source': event, 'keydownus': event.type === 'keydown' }
+      send(type, {'code': event.code })
     }
   },
   activities: {},
@@ -86,6 +99,16 @@ const machineOptions = {
       let isshift = context.keys[event.code].type == 'shift'
       console.log("is shift?" + isshift)
       return isshift
+    },
+    'shiftPressed': (context, event) => {
+      //debugger
+      let pressed = false
+      context.keysPressed.forEach(function(key) {
+        if (key.type == 'shift') {
+          pressed = true
+        }
+      })
+      return pressed
     }
   },
   services: {}}
@@ -94,13 +117,12 @@ const machineOptions = {
 const layout = Machine(machineConfig, machineOptions)
 
 // Machine instance with internal state
-const keyboard = interpret(layout)
-  .onTransition(state => console.log("onTransition: STATE=>" + state.value.start))
-  .start()
+const keyboard = interpret(layout).start()
 
 const loadHandler = function(event) {
-  bodytag.onkeydown = keydownHandler
-  bodytag.onkeyup = keyupHandler
+  //bodytag.onkeydown = keydownHandler
+  //bodytag.onkeyup = keyupHandler
+  keyboard.send('keydown', {code: 'KeyA'})
 }
 
 let keydownHandler = function (event) {
