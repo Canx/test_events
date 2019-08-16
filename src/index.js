@@ -24,16 +24,20 @@ const machineConfig = {
         'keyup': { target: 'checking', actions: ['release','unhighlight']},
       }
     },
-
     checking: {
       onEntry: [ 'log', 'resend' ],
       on: {
-        'shift': { target: 'shift', actions: ['log']},
-        'char': { target: 'normal', actions: ['print','log'] }
+        'shift': { target: 'shift', conditions: 'shiftPressed'},
+        'quote': { target: 'quote'},
+        'char': { target: 'start', actions: ['print'] }
       }
     },
+
     shift: {
-      onEntry: [ 'log' ]
+      onEntry: [ 'log' ],
+      on: {
+        'char': { target: 'start', actions: ['print'] }
+      }
     },
     quote: {
       onEntry: [ 'log' ]
@@ -79,12 +83,7 @@ const machineOptions = {
       let node = document.getElementById("typing")
       node.innerText += char
     },
-    'resend': (context, event) => {
-      let type = context.keys[event.code].type
-      console.log("resend event: " + type)
-      // BUG: does not send event!!!
-      send(type, {'code': event.code })
-    }
+    'resend': send((context, event) => ({type: context.keys[event.code].type, code: event.code }))
   },
   activities: {},
   guards: {
@@ -121,6 +120,9 @@ const loadHandler = function(event) {
   //bodytag.onkeydown = keydownHandler
   //bodytag.onkeyup = keyupHandler
   keyboard.send('keydown', {code: 'ShiftRight'})
+  keyboard.send('keydown', {code: 'KeyA'})
+  keyboard.send('keyup', {code: 'KeyA'})
+  keyboard.send('keyup', {code: 'ShiftRight'})
 }
 
 let keydownHandler = function (event) {
