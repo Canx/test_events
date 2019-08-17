@@ -1,9 +1,13 @@
-import { Machine, interpret, send } from 'xstate'
+import { Machine, interpret, actions, send } from 'xstate'
 
+const { raise } = actions;
 // import { keyboardMachine } afrom './spanish-layout.js'
 
 const bodytag = document.querySelector("body")
 
+const keyboardStates = {
+
+}
 const machineConfig = {
   id: 'keyboard',
   initial: 'start',
@@ -11,39 +15,35 @@ const machineConfig = {
     lastEvent: null,
     keysPressed: new Set(),
     keys: {
-      KeyA: { type: 'char', normal: 'a', shift: 'A', quote: 'á', quoteshift: 'Á'},
+      KeyA: { type: 'char', char: 'a', shift: 'A', quote: 'á', quoteshift: 'Á'},
       ShiftLeft: { type: 'shift'},
-      ShiftRight: { type: 'shift'}
+      ShiftRight: { type: 'shift'},
+
     }
   },
   states: {
     start: {
+      initial: 'char',
       onEntry: [ 'log' ],
+      states: {
+        checking: {},
+        shift: {},
+        quote: {},
+        quoteshift: {},
+        char: {},
+        hist: {
+          type: 'history',
+          target: 'char'
+        }
+      },
       on: {
-        'keydown': { target: 'checking', actions: ['press','highlight']},
-        'keyup': { target: 'checking', actions: ['release','unhighlight']},
+        'keydown': { actions: ['press','highlight', 'resend']},
+        'keyup': { actions: ['release','unhighlight', 'resend']},
+        'shiftkeydown': { target: '.shift'},
+        'shiftkeyup' : { target: '.char'},
+        'quotekeydown': { target: '.quote' },
+        'charkeydown' : { target: '.hist', actions: ['print'] }
       }
-    },
-    checking: {
-      onEntry: [ 'log', 'resend' ],
-      on: {
-        'shift': { target: 'shift', conditions: 'shiftPressed'},
-        'quote': { target: 'quote'},
-        'char': { target: 'start', actions: ['print'] }
-      }
-    },
-
-    shift: {
-      onEntry: [ 'log' ],
-      on: {
-        'char': { target: 'start', actions: ['print'] }
-      }
-    },
-    quote: {
-      onEntry: [ 'log' ]
-    },
-    quoteshift: {
-      onEntry: [ 'log' ]
     }
   }
 }
@@ -51,7 +51,7 @@ const machineConfig = {
 const machineOptions = { 
   actions: {
     'log': (context, event, actionMeta) => {
-      console.log("event type=>" + event.type + " code:" + event.code +" STATE:" + actionMeta.state.value + " PRESSED:" + context.keysPressed)
+      console.log("event type=>" + event.type + " code:" + event.code)
     },
     'highlight': (context, event) => {
       console.log("highlight")
@@ -67,12 +67,12 @@ const machineOptions = {
     },
     'press': (context, event) => {
       //debugger
-      console.log("press")
+      console.log("press " + event.code)
       context.keysPressed.add(event.code)
       context.lastEvent = event
     },
     'release': (context, event) => {
-      console.log("release")
+      console.log("release " + event.code)
       context.keysPressed.delete(event.code)
       context.lastEvent = event
     },
@@ -83,7 +83,10 @@ const machineOptions = {
       let node = document.getElementById("typing")
       node.innerText += char
     },
-    'resend': send((context, event) => ({type: context.keys[event.code].type, code: event.code }))
+    'resend': //(context, event) => raise({ type: context.keys[event.code].type, code: event.code } ) 
+      send((context, event) => (
+        { type: context.keys[event.code].type + event.type,
+          code: event.code }))
   },
   activities: {},
   guards: {
@@ -97,16 +100,17 @@ const machineOptions = {
       console.log("is shift?" + isshift)
       return isshift
     },
-    'shiftPressed': (context, event) => {
-      //debugger
-      let pressed = false
+    'noshift': (context, event) => {
+      let shift = false
       context.keysPressed.forEach(function(key) {
         if (key.type == 'shift') {
-          pressed = true
+          shift = true
         }
       })
-      return pressed
-    }
+      return !shift
+    },
+    'isDown': (context, event) => ( context.lastEvent.type === 'keydown' ),
+    'isUp': (context, event) => ( context.lastEvent.type === 'keyup' )
   },
   services: {}}
 
@@ -114,15 +118,19 @@ const machineOptions = {
 const layout = Machine(machineConfig, machineOptions)
 
 // Machine instance with internal state
-const keyboard = interpret(layout).start()
+const keyboard = interpret(layout)
+  .onTransition(
+    state => {console.log(state.value) }
+  )
+  .start()
 
 const loadHandler = function(event) {
-  //bodytag.onkeydown = keydownHandler
-  //bodytag.onkeyup = keyupHandler
-  keyboard.send('keydown', {code: 'ShiftRight'})
-  keyboard.send('keydown', {code: 'KeyA'})
-  keyboard.send('keyup', {code: 'KeyA'})
-  keyboard.send('keyup', {code: 'ShiftRight'})
+  bodytag.onkeydown = keydownHandler
+  bodytag.onkeyup = keyupHandler
+  //keyboard.send('keydown', {code: 'ShiftRight'})
+  //keyboard.send('keydown', {code: 'KeyA'})
+  //keyboard.send('keyup', {code: 'KeyA'})
+  //keyboard.send('keyup', {code: 'ShiftRight'})
 }
 
 let keydownHandler = function (event) {
