@@ -16,6 +16,7 @@ const machineConfig = {
     keysPressed: new Set(),
     keys: {
       KeyA: { type: 'char', char: 'a', shift: 'A', quote: 'á', quoteshift: 'Á'},
+      Quote: { type: 'quote', quote: '´' },
       ShiftLeft: { type: 'shift'},
       ShiftRight: { type: 'shift'},
 
@@ -28,7 +29,11 @@ const machineConfig = {
       states: {
         checking: {},
         shift: {},
-        quote: {},
+        quote: {
+          on: {
+            'quotekeydown' : { target: 'char', actions: [ 'print' ]}
+          }
+        },
         quoteshift: {},
         char: {},
         hist: {
@@ -41,7 +46,7 @@ const machineConfig = {
         'keyup': { actions: ['release','unhighlight', 'resend']},
         'shiftkeydown': { target: '.shift'},
         'shiftkeyup' : { target: '.char'},
-        'quotekeydown': { target: '.quote' },
+        'quotekeyup': { target: '.quote' },
         'charkeydown' : { target: '.hist', actions: ['print'] }
       }
     }
