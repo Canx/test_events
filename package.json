@@ -23,7 +23,7 @@
     "babel-preset-env": "^1.7.0",
     "live-server": "^1.2.1",
     "webpack": "^4.39.2",
-    "webpack-cli": "^3.3.6",
+    "webpack-cli": "^3.3.12",
     "xstate": "^4.6.7"
   }
 }
